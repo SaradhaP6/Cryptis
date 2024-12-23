@@ -25,7 +25,7 @@ def generate_private_key(number_columns):
 
     # Randomly assign the sign (negative, zero or positive) to the values (with a certain weight)
     # But the highest column should not be multiplied by 0
-    private_key_signs = random.choices([-1, 0, 1], weights=[1, 2, 1], k=number_columns)
+    private_key_signs = random.choices([-1, 0, 1], weights=None, k=number_columns)
     private_key_signs[highest_column_ind] = random.choices([-1, 1], k=1)[0]
 
     for i in range (0, number_columns):
