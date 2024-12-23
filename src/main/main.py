@@ -1,19 +1,17 @@
 import pygame
 import os
 from keys import generate_private_key, generate_public_key
-from messages import generate_message, message_to_ternary, encode_message, decode_message_private_key
+from messages import generate_message, message_to_ternary, encode_message
 from block import BlockTab
 import time
 
 
 ### Constants
 SCREEN_WIDTH = 600
-SCREEN_HEIGHT = 900
+SCREEN_HEIGHT = 750
 FPS = 60
 BLACK_COLOR = (0, 0, 0)
 WHITE_COLOR = (255, 255, 255)
-#LIGHT_PURPLE_COLOR = (142, 68, 173)
-#DARK_PURPLE_COLOR = (74, 35, 90)
 LIGHT_PURPLE_COLOR = (224, 170, 255)
 DARK_PURPLE_COLOR = (123, 44, 191)
 BLOCK_SIZE = (50, 10)
@@ -34,16 +32,14 @@ button_rect = pygame.Rect(SCREEN_WIDTH//2 - 100//2, 500, 100, 50)
 # Logo
 current_file_path = os.path.abspath(__file__)
 current_dir = os.path.dirname(current_file_path)
-logo_path = os.path.join(current_dir, "../img/logo.png")
+logo_path = os.path.join(current_dir, "../img/logoo.png")
 logo_path = os.path.abspath(logo_path)
-congrats_path = os.path.join(current_dir, "../img/congrats.png")
-congrats_path = os.path.abspath(congrats_path)
 try:
     logo = pygame.image.load(logo_path)
     logo_menu = pygame.transform.scale_by(logo, 0.6)
     logo_playing = pygame.transform.scale_by(logo, 0.3)
-except pygame.error as e:
-    print("Error when loading the logo image :", e)
+except:
+    print("Error when loading the logo image")
     logo_menu = pygame.Surface((100, 50))
     logo_menu.fill(BLACK_COLOR)
     logo_playing = pygame.Surface((50, 25))
@@ -55,17 +51,26 @@ title_text2 = font.render("Based on the game, Cryptris,", True, WHITE_COLOR)
 title_text3 = font.render("developped by Digital Cuisine & Inria", True, WHITE_COLOR)
 
 ### Elements for the winning page
+# Congrats image
 congrats_path = os.path.join(current_dir, "../img/congrats.png")
 congrats_path = os.path.abspath(congrats_path)
 try:
     congrats_img = pygame.image.load(congrats_path)
-except pygame.error as e:
-    print("Error when loading the congrats image :", e)
+except:
+    print("Error when loading the congrats image")
     congrats_img = pygame.Surface((100, 50))
     congrats_img.fill(BLACK_COLOR)
 
 ### Elements for the loosing page
-
+# Game Over image
+gameover_path = os.path.join(current_dir, "../img/game_over.png")
+gameover_path = os.path.abspath(gameover_path)
+try:
+    gameover_img = pygame.image.load(gameover_path)
+except:
+    print("Error when loading the game over image")
+    gameover_img = pygame.Surface((100, 50))
+    gameover_img.fill(BLACK_COLOR)
 
 ### Elements for the game
 private_key = []
@@ -77,9 +82,12 @@ key_falling = False
 private_key_tab = None
 encoded_message_tab = None
 
+### Timer setup
+start_time = None
+time_limit = 120
 
 def initialize_game():
-    global private_key, public_key, encoded_message, private_key_tab, encoded_message_tab
+    global private_key, public_key, encoded_message, private_key_tab, encoded_message_tab, start_time
     private_key = generate_private_key(8)
     public_key = generate_public_key(private_key)
     message = generate_message(8)
@@ -102,6 +110,8 @@ def initialize_game():
         block_size=BLOCK_SIZE
     )
     print("New game initialized")
+    start_time = time.time()
+
 
 
 """
@@ -110,6 +120,12 @@ Main loop
 while running:
 
     clock.tick(FPS)
+
+    # Timer  
+    if game_state == "playing" and start_time:
+        elapsed_time = time.time() - start_time
+        if elapsed_time >= time_limit:
+            game_state = "lost"
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -122,14 +138,14 @@ while running:
                 game_state = "playing"
         elif game_state == "playing" and event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                private_key = private_key[1:] + private_key[:1]  # Rotate left
+                private_key = private_key[1:] + private_key[:1]
             elif event.key == pygame.K_RIGHT:
-                private_key = private_key[-1:] + private_key[:-1]  # Rotate right
+                private_key = private_key[-1:] + private_key[:-1]
             elif event.key == pygame.K_UP:
                 sign_inversion *= -1
-                private_key = [-val for val in private_key]  # Flip sign
+                private_key = [-val for val in private_key]
             elif event.key == pygame.K_RETURN:
-                key_falling = True  # Trigger the "drop" action
+                key_falling = True
     
     screen.fill(BLACK_COLOR)
 
@@ -175,9 +191,12 @@ while running:
 
         # Background for the playing screen
         screen.fill(BLACK_COLOR)
-        
-        # Logo for the playing screen
-        screen.blit(logo_playing, (SCREEN_WIDTH//2 - logo_playing.get_width()//2, 750))
+
+        # Display of the timer
+        remaining_time = max(0, time_limit - (time.time() - start_time))
+        font = pygame.font.Font(None, 30)
+        timer_text = font.render(f"Time left: {int(remaining_time)}s", True, WHITE_COLOR)
+        screen.blit(timer_text, (10, 10))
 
         # Update of Private key's blocks
         private_key_tab = BlockTab(
@@ -217,39 +236,48 @@ while running:
     elif game_state == "won":
 
         # Updating the encoded message one last time
+        private_key_tab.draw(screen)
         encoded_message_tab.draw(screen)
-        screen.blit(logo_playing, (SCREEN_WIDTH//2 - logo_playing.get_width()//2, 750))
         pygame.display.flip()
         pygame.time.wait(1000)
 
         screen.fill(BLACK_COLOR)
 
         # Logo & Text
-        screen.blit(congrats_img, (SCREEN_WIDTH//2 - congrats_img.get_width()//2, 100))
+        screen.blit(congrats_img, (25, 0))
         victory_text = font.render("You've decoded the message!", True, WHITE_COLOR)
-        screen.blit(victory_text, (SCREEN_WIDTH // 2 - victory_text.get_width() // 2, SCREEN_HEIGHT // 2))
-        screen.blit(logo_menu, (SCREEN_WIDTH//2 - logo_menu.get_width()//2, 500))
+        screen.blit(victory_text, (SCREEN_WIDTH // 2 - victory_text.get_width() // 2, 450))
+        screen.blit(logo_menu, (SCREEN_WIDTH//2 - logo_menu.get_width()//2, 550))
         # Refresh the page
         pygame.display.flip()
 
         # Wait few seconds to go back to the menu page
-        pygame.time.wait(10000)
+        pygame.time.wait(3000)
         game_state = "menu"
     
     # Lost screen
     elif game_state == "lost":
         
+        # Updating the encoded message one last time
+        private_key_tab.draw(screen)
+        encoded_message_tab.draw(screen)
+        pygame.display.flip()
+        pygame.time.wait(1000)
+
         screen.fill(BLACK_COLOR)
         
         # Logo & Text
-        screen.blit(logo_menu, (SCREEN_WIDTH//2 - logo_menu.get_width()//2, 180))
-        victory_text = font.render("Sorry, you've lost. Try again !", True, WHITE_COLOR)
-        screen.blit(victory_text, (SCREEN_WIDTH // 2 - victory_text.get_width() // 2, SCREEN_HEIGHT // 2))
+        screen.blit(gameover_img, (50, 25))
+        lost_text = font.render("You've lost the game!", True, WHITE_COLOR)
+        try_again_text = font.render("Please try again.", True, WHITE_COLOR)
+        screen.blit(lost_text, (SCREEN_WIDTH // 2 - lost_text.get_width() // 2, 420))
+        screen.blit(try_again_text, (SCREEN_WIDTH // 2 - try_again_text.get_width() // 2, 450))
+        screen.blit(logo_menu, (SCREEN_WIDTH//2 - logo_menu.get_width()//2, 525))
         # Refresh the page
         pygame.display.flip()
 
         # Wait few seconds to go back to the menu page
-        pygame.time.wait(2000)
+        pygame.time.wait(3000)
         game_state = "menu"
 
     # Refresh the page
