@@ -37,19 +37,19 @@ def message_to_ternary(message, number_bits=4):
 
     for i in message:
         ascii_value = ord(i)
+        print("ASCII code:", ascii_value)
+        # To be able to code values superior to 80
+        # Either this or increasing the number of bits to 5 (but will be needing to change the display on the graphical interface)
+        ascii_value-=40
 
-        if ascii_value==0:
-            ternary_char = [0]
-        else:
-            ternary_char = []
-            # Saving the remainder of the division by 3 to deduce the ternary code
-            while ascii_value != 0:
-                remainder_division = ascii_value % 3
-                ascii_value = ascii_value // 3
-                if remainder_division == 2:
-                    remainder_division = -1
-                    ascii_value += 1
-                ternary_char.append(remainder_division)
+        ternary_char = []
+        # Saving the remainder of the division by 3 to deduce the ternary code
+        while ascii_value != 0:
+            remainder_division = ascii_value % 3
+            ascii_value = ascii_value // 3
+            if remainder_division == 2:
+                remainder_division = -1
+            ternary_char.append(remainder_division)
         
         while len(ternary_char) < number_bits:
             ternary_char.append(0)
@@ -58,6 +58,35 @@ def message_to_ternary(message, number_bits=4):
         ternary_message += ternary_char[::-1][:number_bits]
 
     return ternary_message
+
+
+def ternary_to_message(ternary_message, number_bits=4):
+    """
+    Description : Returns the message
+    Arguments :
+        - ternary_message: Message coded in ternary
+        - number_bits: Number of bits to code each letter
+                        & by default it is equal to 4
+    Returns:
+        - message (list)
+    """
+    message = []
+
+    for i in range(0, len(ternary_message), number_bits):
+        ternary_char = ternary_message[i:i + number_bits]
+        decimal_value = 0
+
+        for index, value in enumerate(reversed(ternary_char)):
+            if value == -1:
+                value = 2
+            decimal_value += value * (3**index)
+        
+        if 0 <= decimal_value < 128:
+            message.append(chr(decimal_value+40))
+        else:
+            message.append("?")
+    
+    return message
 
 
 def encode_message(ternary_message, public_key):
