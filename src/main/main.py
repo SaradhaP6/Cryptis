@@ -110,7 +110,7 @@ except:
     key_use_img.fill(BLACK_COLOR)
 # Timer setup
 start_time = None
-time_limit = 120
+time_limit = 90
 # Game mode
 game_mode = "solo"
 # Playing vs Bot
@@ -129,6 +129,13 @@ bot_waiting_time = 1
 Functions
 """
 def initialize_game():
+    """
+    Description : Initialize every variables needed for the game
+    Arguments :
+        - no arguments
+    Returns:
+        - returns nothing
+    """
 
     global private_key, public_key, message, ternary_message, start_time
     global private_key_tab, encoded_message, decoded_message, encoded_message_tab
@@ -209,9 +216,17 @@ def initialize_game():
     start_time = time.time()
     bot_last_move_time = time.time()
 
-    print("New game initialized")
+    print("New game initialized.")
 
 def bot_next_move():
+    """
+    Description : Determines the next (best) move for the bot
+    Arguments :
+        - no arguments
+    Returns:
+        - returns nothing
+    """
+
     global bot_using_key, bot_encoded_message, bot_decoded_message
 
     if not botPlayingWithPrivateKey:
@@ -277,9 +292,9 @@ while running:
         elif game_state == "menu" and event.type == pygame.MOUSEBUTTONDOWN :
             if start_button_rect.collidepoint(event.pos):
                 initialize_game()
-                print("Private Key:", private_key)
-                print("Initial Message:", message)
-                print("Initial Ternary Message:", ternary_message)
+                #print("Private Key:", private_key)
+                #print("Initial Message:", message)
+                #print("Initial Ternary Message:", ternary_message)
                 print("Encoded Message:", encoded_message)
                 game_state = "playing"
             elif game_mode_button_rect.collidepoint(event.pos):
@@ -287,9 +302,11 @@ while running:
         elif game_state == "ModeSelection" and event.type == pygame.MOUSEBUTTONDOWN :
             if solo_button_rect.collidepoint(event.pos):
                 game_mode = "solo"
+                print("You are playing in solo.")
                 game_state = "menu"
             elif vsBot_button_rect.collidepoint(event.pos):
                 game_mode = "vsBot"
+                print("You are playing against the Bot.")
                 game_state = "menu"
         elif game_state == "playing" and event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
@@ -550,22 +567,23 @@ while running:
         #Drawing encoded message
         encoded_message_tab.draw(screen)
 
-        # Updating bot using key & encoded message
-        if time.time() - bot_last_move_time > bot_waiting_time:
-            bot_next_move()
-            bot_last_move_time = time.time()
+        if game_mode == "vsBot":
+            # Updating bot using key & encoded message
+            if time.time() - bot_last_move_time > bot_waiting_time:
+                bot_next_move()
+                bot_last_move_time = time.time()
 
-        bot_encoded_message_tab = BlockTab(
-            x_first_column=800,
-            y_first_line=675,
-            number_blocks_per_column=bot_encoded_message,
-            column_direction=1,
-            block_size=BLOCK_SIZE_DEFAULT
-        )
-        
-        # Drawing bot using key & bot encoded message
-        bot_using_key_tab.draw(screen)
-        bot_encoded_message_tab.draw(screen)
+            bot_encoded_message_tab = BlockTab(
+                x_first_column=800,
+                y_first_line=675,
+                number_blocks_per_column=bot_encoded_message,
+                column_direction=1,
+                block_size=BLOCK_SIZE_DEFAULT
+            )
+            
+            # Drawing bot using key & bot encoded message
+            bot_using_key_tab.draw(screen)
+            bot_encoded_message_tab.draw(screen)
 
         #Refresh the screen
         pygame.display.flip()
@@ -574,9 +592,10 @@ while running:
         if all(-1 <= value <= 1 for value in encoded_message):
             game_state = "won"
 
-        # If bot have won
-        if all(-1 <= bot_value <= 1 for bot_value in bot_encoded_message):
-            game_state = "lost"
+        if game_mode == "vsBot":
+            # If bot have won
+            if all(-1 <= bot_value <= 1 for bot_value in bot_encoded_message):
+                game_state = "lost"
     
     # Win screen
     elif game_state == "won":
@@ -584,8 +603,9 @@ while running:
         # Updating the encoded message one last time
         private_key_tab.draw(screen)
         encoded_message_tab.draw(screen)
-        bot_using_key_tab.draw(screen)
-        bot_encoded_message_tab.draw(screen)
+        if game_mode == "vsBot":
+            bot_using_key_tab.draw(screen)
+            bot_encoded_message_tab.draw(screen)
 
         # Displaying the decoded message
         font = pygame.font.Font(None, 30)
@@ -597,7 +617,8 @@ while running:
             bot_decoded_text = font.render(f"Message: {bot_decoded_message}", True, LIGHT_PURPLE_COLOR)
             screen.blit(bot_decoded_text, (920, SCREEN_HEIGHT - 30))
         
-        print("Last encoded message:", encoded_message)
+        #print("Last encoded message:", encoded_message)
+        print("You have won !")
         print("Decoded message:", decoded_message)
 
         # Refresh & wait
@@ -633,6 +654,8 @@ while running:
 
         # Refresh the page
         pygame.display.flip()
+
+        print("You have lost!")
 
         # Wait few seconds to go back to the menu page
         pygame.time.wait(3000)
