@@ -37,7 +37,7 @@ def message_to_ternary(message, number_bits=4):
 
     for i in message:
         ascii_value = ord(i)
-        print("ASCII code:", ascii_value)
+        #print("ASCII code:", ascii_value)
         # To be able to code values superior to 80
         # Either this or increasing the number of bits to 5 (but will be needing to change the display on the graphical interface)
         ascii_value-=40
