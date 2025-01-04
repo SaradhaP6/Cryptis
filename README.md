@@ -17,7 +17,7 @@ In this version, the player is playing solo and need to decode a message withing
 You will need a basic Python environment with libraries such as random and pygame installed to run this code.
 
 ## Support
-If you encounter problems, feel free to contact Saradha PERIATAMBY at periatamby@et.esiea.fr.
+If you encounter problems, feel free to contact me.
 
 ## Roadmap
 v1.0.0: Basic and simpler version of the game
